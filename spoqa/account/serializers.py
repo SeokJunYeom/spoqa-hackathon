@@ -11,17 +11,20 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'nickname', 'is_active',)
+        fields = ('id', 'user_id', 'nickname', 'is_active',)
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'nickname', 'password', 'is_active')
+        fields = ('id', 'user_id', 'nickname', 'password', 'is_active')
         extra_kwargs = {
             'is_active': {
                 'read_only': True,
+            },
+            'password': {
+                'write_only': True,
             }
         }
 
@@ -32,12 +35,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=30)
-    nickname = serializers.CharField(max_length=30)
+    user_id = serializers.CharField(max_length=30)
     password = serializers.CharField(max_length=128)
 
     def validate(self, attrs):
-        user = authenticate(nickname=attrs['nickname'], password=attrs['password'])
+        user = authenticate(user_id=attrs['user_id'], password=attrs['password'])
 
         if user is None:
             raise serializers.ValidationError(_('일치하는 게정이 없습니다.'))

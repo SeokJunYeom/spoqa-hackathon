@@ -5,9 +5,9 @@ from django.db import models
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, username, nickname, password=None):
+    def create_user(self, user_id, nickname, password=None):
         user = self.model(
-            username=username,
+            user_id=user_id,
             nickname=nickname,
         )
 
@@ -16,9 +16,9 @@ class UserManager(BaseUserManager):
 
         return user
 
-    def create_superuser(self, username, nickname, password=None):
+    def create_superuser(self, user_id, nickname, password=None):
         user = self.create_user(
-            username=username,
+            user_id=user_id,
             nickname=nickname,
             password=password,
         )
@@ -30,14 +30,14 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(
-        verbose_name=_('사용자명'),
+    user_id = models.CharField(
+        verbose_name=_('사용자 아이디'),
         max_length=30,
+        unique=True,
     )
     nickname = models.CharField(
         verbose_name=_('닉네임'),
         max_length=30,
-        unique=True,
     )
     is_active = models.BooleanField(
         verbose_name=_('계정 유효한지'),
@@ -50,8 +50,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         through='todo.History',
     )
 
-    USERNAME_FIELD = 'nickname'
-    REQUIRED_FIELDS = ['username']
+    USERNAME_FIELD = 'user_id'
+    REQUIRED_FIELDS = ['nickname']
 
     objects = UserManager()
 
@@ -61,7 +61,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         db_table = 'user'
 
     def __str__(self):
-        return self.username
+        return self.user_id
 
     @property
     def is_staff(self):

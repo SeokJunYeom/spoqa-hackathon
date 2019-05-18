@@ -11,9 +11,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_INITDB_ARGS=--encoding=UTF-8
-      - POSTGRES_DB=poqa
-    env_file:
-      - ./secret/postgresql.env
+      - POSTGRES_DB=spoqa
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "localhost", "-p", "5432", "-q", "-U", "postgres"]
       interval: 1m30s

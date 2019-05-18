@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'account.apps.AccountConfig',
+    'todo.apps.TodoConfig',
 ]
 
 MIDDLEWARE = [
@@ -64,8 +65,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'spoqa',
         'USER': 'postgres',
-        'PASSWORD': 'zirkfied123',
-        'HOST': '127.0.0.1',
+        'PASSWORD': 'spoqa',
+        'HOST': 'postgres',
         'PORT': 5432,
     }
 }

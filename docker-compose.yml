@@ -1,0 +1,45 @@
+version '3.7'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    networks:
+      - postgres-net
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+      - POSTGRES_DB=poqa
+    env_file:
+      - ./secret/postgresql.env
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "5432", "-q", "-U", "postgres"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 10
+    ports:
+      - 5432:5432
+
+  backend:
+    image: python:3.7
+    container_name: backend
+    command: ["/bin/bash", "/code/script.sh"]
+    networks:
+      - postgres-net
+    volumes:
+      - ./spoca:/code
+    environment:
+      - PYTHONUNBEFFERED=1
+    ports:
+      - 8000:8000
+    depends_on:
+      - postgres
+
+networks:
+  postgres-net:
+
+volumes:
+  postgres-data:
+

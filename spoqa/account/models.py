@@ -1,6 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 from django.db import models
+from django.conf import settings
 
 
 class UserManager(BaseUserManager):
@@ -43,11 +44,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name=_('계정 유효한지'),
         default=True,
     )
-    to_do_history = models.ManyToManyField(
+    to_do = models.ManyToManyField(
         verbose_name=_('히스토리'),
         to='todo.ToDoText',
         related_name='users',
-        through='todo.History',
+        through='History',
     )
 
     USERNAME_FIELD = 'user_id'
@@ -66,3 +67,32 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_staff(self):
         return self.is_superuser
+
+
+class History(models.Model):
+    to_do = models.ForeignKey(
+        verbose_name=_('to do'),
+        to='todo.ToDoText',
+        related_name='history',
+        on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(
+        verbose_name=_('사용자'),
+        to=settings.AUTH_USER_MODEL,
+        related_name='history',
+        on_delete=models.CASCADE
+    )
+    is_done = models.BooleanField(
+        verbose_name=_('마쳤냐'),
+        default=True
+    )
+    updated_at = models.DateTimeField(
+        verbose_name=_('수정 날짜'),
+        auto_now=True,
+    )
+
+    class Meta:
+        verbose_name = _('히스토리')
+        verbose_name_plural = _('히스토리')
+        db_table = 'history'
+        unique_together = ('to_do', 'user')

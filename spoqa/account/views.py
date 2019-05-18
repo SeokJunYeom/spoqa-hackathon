@@ -3,10 +3,17 @@ import base64
 from django.contrib.auth import get_user_model, logout
 from django.contrib.sessions.models import Session
 
+from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView, mixins
 from rest_framework.response import Response
 
-from .serializers import UserSerializer, RegistrationSerializer, LoginSerializer
+from todo.models import Recommend
+from .models import History
+from .serializers import (
+    UserSerializer, RegistrationSerializer, LoginSerializer, UserToDoSerializer
+)
+from .paginations import ListPagination
 
 
 User = get_user_model()
@@ -72,3 +79,65 @@ class LogoutView(GenericAPIView):
         logout(request)
 
         return Response({'message': 'success'})
+
+
+class UserToDoView(APIView):
+    serializer_class = UserToDoSerializer
+
+    def get(self, request, id):
+        try:
+            user = User.objects.get(id=self.kwargs['id'])
+
+        except User.DoesNotExist:
+            return Response({'message': '존재 하지 않는 사용자 입니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+        recommend = Recommend.objects.first().to_do_list.all()
+        history = user.to_do.all()
+
+        ids = history.values_list('id', flat=True)
+
+        recommend = recommend.exclude(id__in=ids)
+
+        for rec in recommend:
+
+            tmp = History.objects.filter(user=user, to_do=rec)
+
+            if tmp.exists():
+                pass
+
+            else:
+                History.objects.create(user=user, to_do=rec, is_done=False)
+
+        queryset = user.history.order_by('is_done', '-updated_at')
+
+        context = {
+            'request': request,
+        }
+
+        paginator = ListPagination()
+        paginated_queryset = paginator.paginate_queryset(queryset, request, view=None)
+        serializer = self.serializer_class(paginated_queryset, many=True, context=context)
+
+        return paginator.get_paginated_response(serializer.data)
+
+    def post(self, request, id):
+
+        try:
+            user = User.objects.get(id=self.kwargs['id'])
+
+        except User.DoesNotExist:
+            return Response({'message': '존재 하지 않는 사용자 입니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+        to_do_id = request.data['to_do']
+
+        tmp = History.objects.filter(user=user, to_do_id=to_do_id)
+        if tmp.exists():
+            his = tmp[0]
+            his.is_done = True
+            his.save()
+
+        else:
+            History.objects.create(user=user, to_do_id=to_do_id, is_done=True)
+
+        return Response({'message': 'success'})
+

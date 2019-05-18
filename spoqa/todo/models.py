@@ -1,6 +1,7 @@
 from django.db import models
-from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+
+from account.models import History
 
 
 class ToDoKeyword(models.Model):
@@ -41,15 +42,19 @@ class ToDoTextManager(models.Manager):
 
         for i in range(count):
             text = f'{where_list[0].text} {who_list[0].text} {how_list[0].text} {what_list[0].text}'
-            to_do_list.append(ToDoText.objects.create(to_do=text))
+            to_do_list.append(self.model.objects.create(text=text))
 
         return to_do_list
 
 
 class ToDoText(models.Model):
-    to_do = models.TextField(
+    text = models.TextField(
         verbose_name=_('to do'),
         blank=True,
+    )
+    created_at = models.DateTimeField(
+        verbose_name=_('생성 날짜'),
+        auto_now_add=True,
     )
 
     objects = ToDoTextManager()
@@ -58,17 +63,19 @@ class ToDoText(models.Model):
         verbose_name = _('to do text')
         verbose_name_plural = _('to do text')
         db_table = 'to_do_text'
+        ordering = ['-created_at']
 
     def __str__(self):
-        return self.to_do
+        return self.text
 
 
 class RecommendManager(models.Manager):
 
     def make_list(self, count):
+        History.objects.filter(is_done=False).delete()
         recommend = self.model.objects.first() or self.model.objects.create()
         recommend.to_do_list.clear()
-        recommend.to_do_list.add(*ToDo.objects.make(count))
+        recommend.to_do_list.add(*ToDoText.objects.make(count))
 
 
 class Recommend(models.Model):
@@ -91,26 +98,3 @@ class Recommend(models.Model):
     def save(self, *args, **kwargs):
         self.pk = 1
         super().save(*args, **kwargs)
-
-
-class History(models.Model):
-    user = models.ForeignKey(
-        verbose_name=_('사용자'),
-        to=settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-    )
-    to_do = models.ForeignKey(
-        verbose_name=_('to do'),
-        to='ToDoText',
-        on_delete=models.CASCADE,
-    )
-    created_at = models.DateTimeField(
-        verbose_name=_('생성 날짜'),
-        auto_now_add=True,
-    )
-
-    class Meta:
-        verbose_name = _('히스토리')
-        verbose_name_plural = _('히스토리')
-        db_table = 'history'
-        ordering = ['-created_at']

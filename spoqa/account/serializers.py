@@ -3,6 +3,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
+from .models import History
+
 
 User = get_user_model()
 
@@ -51,3 +53,17 @@ class LoginSerializer(serializers.Serializer):
 
         return attrs
 
+
+class UserToDoSerializer(serializers.ModelSerializer):
+    text = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = History
+        fields = ('is_done', 'text', 'to_do', 'created_at', 'updated_at')
+
+    def get_text(self, obj):
+        return obj.to_do.text
+
+    def get_created_at(self, obj):
+        return obj.to_do.created_at

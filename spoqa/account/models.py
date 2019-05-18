@@ -43,6 +43,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name=_('계정 유효한지'),
         default=True,
     )
+    to_do_history = models.ManyToManyField(
+        verbose_name=_('히스토리'),
+        to='todo.ToDoText',
+        related_name='users',
+        through='todo.History',
+    )
 
     USERNAME_FIELD = 'nickname'
     REQUIRED_FIELDS = ['username']

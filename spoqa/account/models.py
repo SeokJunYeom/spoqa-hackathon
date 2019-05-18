@@ -96,3 +96,25 @@ class History(models.Model):
         verbose_name_plural = _('히스토리')
         db_table = 'history'
         unique_together = ('to_do', 'user')
+
+
+class Feed(models.Model):
+    img = models.FileField(
+        upload_to='image/',
+    )
+    content = models.TextField(
+        blank=True
+    )
+    to_do = models.ForeignKey(
+        to='todo.ToDoText',
+        related_name='feed',
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        to=settings.AUTH_USER_MODEL,
+        related_name='feeds',
+        on_delete=models.CASCADE,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )

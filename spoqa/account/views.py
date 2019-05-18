@@ -1,17 +1,21 @@
 import base64
 
+from django.db.models import Count
 from django.contrib.auth import get_user_model, logout
 from django.contrib.sessions.models import Session
 
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import GenericAPIView, mixins
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser
+from rest_framework.decorators import action
 
 from todo.models import Recommend
-from .models import History
+from .models import History, Feed
 from .serializers import (
-    UserSerializer, RegistrationSerializer, LoginSerializer, UserToDoSerializer
+    UserSerializer, RegistrationSerializer, LoginSerializer, UserToDoSerializer, FeedSerializer
 )
 from .paginations import ListPagination
 
@@ -141,3 +145,34 @@ class UserToDoView(APIView):
 
         return Response({'message': 'success'})
 
+
+class FeedView(ModelViewSet):
+    queryset = Feed.objects.all()
+    serializer_class = FeedSerializer
+    parser_classes = (MultiPartParser,)
+
+
+class UserPostView(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_classes = UserSerializer
+
+    @action(detail=True, methods=['get'])
+    def posts(self, reuqest, pk):
+        user = self.get_object()
+        queryset = user.feeds
+        serializer = FeedSerializer(queryset, many=True)
+
+        return Response(serializer.data)
+
+
+class RankView(APIView):
+
+    def get(self, request):
+        user_id = request.query_params.get('user_id')
+        queryset = User.objects.annotate(count=Count('feeds')).values('nickname', 'count').order_by('-count')
+        my = queryset.get(id=user_id)
+
+        return Response({
+            'my': my,
+            'all': queryset
+        })

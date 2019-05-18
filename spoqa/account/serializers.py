@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from .models import History
+from .models import History, Feed
 
 
 User = get_user_model()
@@ -67,3 +67,22 @@ class UserToDoSerializer(serializers.ModelSerializer):
 
     def get_created_at(self, obj):
         return obj.to_do.created_at
+
+
+class FeedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Feed
+        fields = '__all__'
+        extra_kwargs = {
+            'created_at': {
+                'read_only': True
+            }
+        }
+
+    def create(self, validated_data):
+        history = History.objects.get(user_id=validated_data['user'], to_do_id=validated_data['to_do'])
+        history.is_done = True
+        history.save()
+        return super().create(validated_data)
+ 

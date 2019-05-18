@@ -5,7 +5,7 @@ from .serializers import ToDoTextSerializer
 
 
 class RecommendView(GenericAPIView, mixins.ListModelMixin):
-    queryset = Recommend.objects.first().to_do_list.all()
+    #queryset = Recommend.objects.first().to_do_list.all()
     serializer_class = ToDoTextSerializer
 
     def get(self, request):

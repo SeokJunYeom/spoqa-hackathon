@@ -27,7 +27,7 @@ services:
     networks:
       - postgres-net
     volumes:
-      - ./spoca:/code
+      - ./spoqa:/code
     environment:
       - PYTHONUNBEFFERED=1
     ports:
